@@ -1,0 +1,22 @@
+{
+  "name": "Новорослесэкспорт - ПортФронт",
+  "short_name": "ПортФронт",
+  "description": "Бизнес-приложение для управления тремя грузовыми фронтами",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0b1120",
+  "theme_color": "#0b1120",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2830/2830284.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2830/2830284.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

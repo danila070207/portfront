@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ПортФронт - Новорослесэкспорт</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root { 
+            --bg-main: #0b1120; --bg-card: #1e293b; --bg-input: #0f172a;
+            --primary: #3b82f6; --primary-hover: #2563eb; --accent: #06b6d4;
+            --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
+            --text-main: #f8fafc; --text-muted: #94a3b8; --border: rgba(255, 255, 255, 0.1);
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        body { 
+            background-color: #000000; background-image: radial-gradient(circle at 50% 0%, #172554 0%, #000000 70%);
+            display: flex; justify-content: center; align-items: center; 
+            min-height: 100vh; color: var(--text-main); 
+        }
+
+        .phone-frame {
+            width: 100%; max-width: 400px; height: 100vh; max-height: 850px;
+            background-color: var(--bg-main); position: relative; overflow: hidden;
+            display: flex; flex-direction: column; border-radius: 0; box-shadow: none;
+        }
+        
+        @media (min-width: 450px) {
+            .phone-frame { border-radius: 40px; border: 8px solid #1e293b; box-shadow: 0 0 50px rgba(59, 130, 246, 0.2); }
+            .phone-frame::before {
+                content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+                width: 120px; height: 25px; background: #1e293b; border-bottom-left-radius: 15px; border-bottom-right-radius: 15px; z-index: 999;
+            }
+        }
+
+        /* --- ЭКРАН ВХОДА --- */
+        #login-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-main); z-index: 1000;
+            display: flex; flex-direction: column; justify-content: center; padding: 30px;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+        #login-screen.hidden { opacity: 0; pointer-events: none; transform: scale(1.05); }
+        
+        .login-logo { text-align: center; margin-bottom: 40px; }
+        .login-logo i { font-size: 60px; color: var(--accent); text-shadow: 0 0 30px rgba(6, 182, 212, 0.5); margin-bottom: 15px; }
+        .login-logo h1 { font-size: 28px; font-weight: 700; color: white; letter-spacing: 1px; }
+        .login-logo p { font-size: 13px; color: var(--text-muted); margin-top: 5px; text-transform: uppercase; letter-spacing: 2px; }
+
+        /* --- ОСНОВНОЕ ПРИЛОЖЕНИЕ --- */
+        #app-screen { display: flex; flex-direction: column; height: 100%; width: 100%; transition: opacity 0.4s ease; }
+        #app-screen.hidden { opacity: 0; pointer-events: none; }
+
+        /* ШАПКА */
+        header { 
+            padding: 30px 20px 15px; display: flex; justify-content: space-between; align-items: center; 
+            background: linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, rgba(11, 17, 32, 0) 100%); position: relative; z-index: 10;
+        }
+        header h1 { font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 10px; color: white;}
+        header h1 i { color: var(--accent); }
+        
+        .header-right { display: flex; align-items: center; gap: 10px; }
+        .role-badge { font-size: 11px; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); color: var(--primary); padding: 5px 10px; border-radius: 20px; font-weight: 600; text-transform: uppercase; }
+        .logout-btn { background: transparent; border: none; color: var(--text-muted); font-size: 18px; cursor: pointer; padding: 5px; }
+        .logout-btn:active { color: var(--danger); }
+
+        .content-area { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 15px 20px 90px; position: relative; }
+        .content-area::-webkit-scrollbar { width: 4px; }
+        .content-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(20px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+        .card { 
+            background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px);
+            border: 1px solid var(--border); border-radius: 20px; padding: 20px; margin-bottom: 15px; box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px;}
+        .card h3 { font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px; color: #fff; margin-bottom: 15px;}
+        .card h3 i { color: var(--primary); }
+
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .stat-card { background: linear-gradient(145deg, #1e293b, #0f172a); border: 1px solid var(--border); padding: 16px; border-radius: 16px; position: relative; overflow: hidden; }
+        .stat-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--primary); }
+        .stat-card.green::before { background: var(--success); }
+        .stat-card.orange::before { background: var(--warning); }
+        .stat-card.purple::before { background: #8b5cf6; }
+        .stat-card h4 { font-size: 11px; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; }
+        .stat-card p { font-size: 26px; font-weight: 700; color: white; }
+
+        .form-group { margin-bottom: 16px; }
+        label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px; font-weight: 500; text-transform: uppercase; }
+        input, select { width: 100%; padding: 14px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 12px; font-size: 15px; color: white; outline: none; transition: all 0.3s; }
+        input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
+        
+        button.btn { 
+            width: 100%; padding: 16px; border: none; border-radius: 12px; 
+            background: linear-gradient(135deg, var(--primary) 0%, #2563eb 100%); 
+            color: white; font-size: 15px; font-weight: 600; cursor: pointer; 
+            display: flex; justify-content: center; align-items: center; gap: 10px; transition: all 0.2s; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+        button.btn:active { transform: scale(0.97); }
+        button.btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); box-shadow: none; }
+
+        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); }
+        .list-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .list-item b { font-weight: 600; font-size: 14px; color: white; }
+        .list-item span.sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; display: block; }
+        
+        .badge { padding: 5px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+        .badge-ok { background: rgba(16, 185, 129, 0.15); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
+        .badge-warn { background: rgba(245, 158, 11, 0.15); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.3); }
+        .badge-danger { background: rgba(239, 68, 68, 0.15); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
+
+        .calc-panel { background: linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%); border: 1px solid rgba(6, 182, 212, 0.3); padding: 20px; border-radius: 16px; text-align: center; margin: 15px 0; }
+        .calc-panel .value { font-size: 32px; font-weight: 800; color: var(--accent); text-shadow: 0 0 20px rgba(6, 182, 212, 0.4); font-family: monospace;}
+
+        .btn-delete { background: transparent; border: none; color: var(--danger); font-size: 18px; cursor: pointer; padding: 5px; transition: 0.2s; opacity: 0.7;}
+        .btn-delete:hover { opacity: 1; transform: scale(1.1); }
+        .btn-clear-all { background: transparent; border: none; color: var(--text-muted); font-size: 12px; cursor: pointer; text-decoration: underline;}
+
+        /* --- НИЖНЕЕ МЕНЮ --- */
+        .bottom-nav { 
+            position: absolute; bottom: 15px; left: 15px; right: 15px; 
+            background: rgba(30, 41, 59, 0.85); backdrop-filter: blur(15px); 
+            display: flex; justify-content: space-around; padding: 10px; 
+            border-radius: 24px; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 100;
+        }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-muted); text-decoration: none; font-size: 10px; font-weight: 500; cursor: pointer; padding: 8px 10px; border-radius: 16px; transition: all 0.3s; }
+        .nav-item i { font-size: 18px; margin-bottom: 4px; transition: transform 0.2s; }
+        .nav-item.active { color: white; background: rgba(59, 130, 246, 0.2); }
+        .nav-item.active i { color: var(--primary); transform: translateY(-2px); }
+    </style>
+</head>
+<body>
+
+    <div class="phone-frame">
+        
+        <!-- ЭКРАН АВТОРИЗАЦИИ -->
+        <div id="login-screen">
+            <div class="login-logo">
+                <i class="fa-solid fa-anchor"></i>
+                <h1>ПортФронт</h1>
+                <p>Новорослесэкспорт</p>
+            </div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>Табельный номер</label>
+                    <input type="text" id="loginId" placeholder="Например: 1234" required>
+                </div>
+                <div class="form-group">
+                    <label>Роль (Доступ)</label>
+                    <select id="loginRole">
+                        <option value="Тальман">Тальман</option>
+                        <option value="Мастер площадки">Мастер площадки</option>
+                        <option value="Диспетчер ЖД">Диспетчер ЖД</option>
+                        <option value="Руководитель">Руководитель (Обзор)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Пароль</label>
+                    <input type="password" id="loginPass" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn" style="margin-top: 10px;"><i class="fa-solid fa-right-to-bracket"></i> Войти в систему</button>
+            </form>
+        </div>
+
+        <!-- ОСНОВНОЕ ПРИЛОЖЕНИЕ -->
+        <div id="app-screen" class="hidden">
+            <header>
+                <h1><i class="fa-solid fa-anchor"></i> ПортФронт</h1>
+                <div class="header-right">
+                    <span class="role-badge" id="currentRole">Обзор</span>
+                    <button class="logout-btn" onclick="logout()"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
+                </div>
+            </header>
+
+            <div class="content-area">
+                
+                <!-- ЭКРАН 1: ОБЗОР -->
+                <main id="tab-dashboard" class="tab-content active">
+                    <div class="grid">
+                        <div class="stat-card"><h4><i class="fa-solid fa-ship"></i> Судно</h4><p id="dashShips">0</p></div>
+                        <div class="stat-card orange"><h4><i class="fa-solid fa-box"></i> Контейнеры</h4><p id="dashContainers">0</p></div>
+                        <div class="stat-card green"><h4><i class="fa-solid fa-tree"></i> Лес (м³)</h4><p id="dashTimber">0</p></div>
+                        <div class="stat-card purple"><h4><i class="fa-solid fa-train"></i> Вагоны</h4><p id="dashWagons">0</p></div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3><i class="fa-solid fa-bolt"></i> Активные процессы</h3>
+                        <div id="activeProcesses">
+                            <p style="color: var(--text-muted); font-size: 13px; text-align: center; padding: 10px 0;">Нет активных процессов</p>
+                        </div>
+                    </div>
+                </main>
+
+                <!-- ЭКРАН 2: СУДНО -->
+                <main id="tab-ships" class="tab-content">
+                    <div class="card">
+                        <h3><i class="fa-solid fa-ship"></i> Приход судна</h3>
+                        <div class="form-group">
+                            <label>Название судна</label>
+                            <input type="text" id="shipName" placeholder="Например: MSC Anna">
+                        </div>
+                        <div class="form-group">
+                            <label>Тип груза</label>
+                            <input type="text" id="shipCargo" placeholder="Например: Пиломатериалы">
+                        </div>
+                        <div class="form-group">
+                            <label>Статус</label>
+                            <select id="shipStatus">
+                                <option value="Ожидание">Ожидание</option>
+                                <option value="Выгрузка">Выгрузка</option>
+                                <option value="Погрузка">Погрузка</option>
+                            </select>
+                        </div>
+                        <button class="btn" onclick="addShip()"><i class="fa-solid fa-plus"></i> Добавить судно</button>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-list"></i> Суда в порту</h3>
+                            <button class="btn-clear-all" onclick="clearShips()">Очистить</button>
+                        </div>
+                        <div id="shipsList">
+                            <p style="color: var(--text-muted); font-size: 13px; text-align: center; padding: 10px 0;">Список пуст</p>
+                        </div>
+                    </div>
+                </main>
+
+                <!-- ЭКРАН 3: ТАЛЬМАН -->
+                <main id="tab-tally" class="tab-content">
+                    <div class="card">
+                        <h3><i class="fa-solid fa-tablet-screen-button"></i> Тальманский учёт</h3>
+                        <form id="tallyForm">
+                            <div class="form-group">
+                                <label>Коносамент (BL)</label>
+                                <input type="text" id="blNumber" placeholder="Введите номер..." required>
+                            </div>
+                            <div class="form-group">
+                                <label>Грузополучатель</label>
+                                <input type="text" id="consignee" placeholder="Название компании" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Количество мест</label>
+                                <input type="number" id="packageCount" placeholder="0" required>
+                            </div>
+                            <button type="submit" class="btn"><i class="fa-solid fa-cloud-arrow-down"></i> Сохранить офлайн</button>
+                        </form>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-clock-rotate-left"></i> Очередь синхронизации</h3>
+                            <button class="btn-clear-all" onclick="clearAllRecords()">Очистить всё</button>
+                        </div>
+                        <div id="tallyLog">
+                            <p style="color: var(--text-muted); font-size: 13px; text-align: center; padding: 10px 0;">Нет записей</p>
+                        </div>
+                    </div>
+                </main>
+
+                <!-- ЭКРАН 4: КОНТЕЙНЕРЫ -->
+                <main id="tab-containers" class="tab-content">
+                    <div class="card">
+                        <h3><i class="fa-solid fa-barcode"></i> Интеграция с TOS</h3>
+                        <button class="btn btn-outline" onclick="simulateScan()"><i class="fa-solid fa-camera-retro"></i> Симулировать скан крана</button>
+                        
+                        <div id="scanResult" style="display:none; margin-top: 15px; padding: 15px; background: var(--bg-input); border-radius: 12px; border: 1px solid var(--primary);">
+                            <div style="margin-bottom: 10px; font-size: 14px;"><label style="margin:0; font-size:10px;">КОНТЕЙНЕР</label><br><b id="scanNum" style="color: var(--accent); font-size: 18px;">-</b></div>
+                            <div style="margin-bottom: 15px; font-size: 14px;"><label style="margin:0; font-size:10px;">ЯЧЕЙКА</label><br><b id="scanCell" style="color: var(--accent); font-size: 18px;">-</b></div>
+                            <button class="btn" style="padding: 12px; font-size: 14px;" onclick="confirmContainer()"><i class="fa-solid fa-check-double"></i> Подтвердить</button>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-list"></i> Список контейнеров</h3>
+                            <button class="btn-clear-all" onclick="clearContainers()">Очистить</button>
+                        </div>
+                        <div id="containersList">
+                            <p style="color: var(--text-muted); font-size: 13px; text-align: center; padding: 10px 0;">Список пуст</p>
+                        </div>
+                    </div>
+                </main>
+
+                <!-- ЭКРАН 5: ЛЕС -->
+                <main id="tab-timber" class="tab-content">
+                    <div class="card">
+                        <h3><i class="fa-solid fa-tree"></i> Приёмка леса</h3>
+                        <div class="form-group">
+                            <label>Тип пакета</label>
+                            <select id="packType" onchange="calcVolume()"><option value="1.5">Пиломатериалы (1.5 м³)</option><option value="2.2">Фанера (2.2 м³)</option><option value="1.8">ДВП (1.8 м³)</option></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Количество пакетов</label>
+                            <input type="number" id="packCount" placeholder="0" oninput="calcVolume()">
+                        </div>
+                        <div class="calc-panel">
+                            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 5px;">АВТОРАСЧЁТ ОБЪЁМА</div>
+                            <div class="value"><span id="totalVolume">0</span> <span style="font-size: 16px; color: var(--text-muted);">м³</span></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Адрес хранения</label>
+                            <input type="text" id="timberAddress" placeholder="Введите адрес...">
+                        </div>
+                        <button class="btn" onclick="addTimber()"><i class="fa-solid fa-box-open"></i> Разместить</button>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-warehouse"></i> Партии на складе</h3>
+                            <button class="btn-clear-all" onclick="clearTimber()">Очистить</button>
+                        </div>
+                        <div id="timberList">
+                            <p style="color: var(--text-muted); font-size: 13px; text-align: center; padding: 10px 0;">Список пуст</p>
+                        </div>
+                    </div>
+                </main>
+
+            </div>
+
+            <!-- НИЖНЕЕ МЕНЮ -->
+            <nav class="bottom-nav">
+                <a class="nav-item active" onclick="switchTab('dashboard', this)"><i class="fa-solid fa-chart-pie"></i> Обзор</a>
+                <a class="nav-item" onclick="switchTab('ships', this)"><i class="fa-solid fa-ship"></i> Судно</a>
+                <a class="nav-item" onclick="switchTab('tally', this)"><i class="fa-solid fa-tablet-screen-button"></i> Тальман</a>
+                <a class="nav-item" onclick="switchTab('containers', this)"><i class="fa-solid fa-box"></i> Контейнеры</a>
+                <a class="nav-item" onclick="switchTab('timber', this)"><i class="fa-solid fa-tree"></i> Лес</a>
+            </nav>
+        </div>
+    </div>
+
+    <script>
+        // --- ИНИЦИАЛИЗАЦИЯ ---
+        function initDB() {
+            if (!localStorage.getItem('db_ships')) localStorage.setItem('db_ships', JSON.stringify([]));
+            if (!localStorage.getItem('db_containers')) localStorage.setItem('db_containers', JSON.stringify([]));
+            if (!localStorage.getItem('db_timber')) localStorage.setItem('db_timber', JSON.stringify([]));
+            if (!localStorage.getItem('db_wagons')) localStorage.setItem('db_wagons', JSON.stringify([]));
+            if (!localStorage.getItem('db_tally')) localStorage.setItem('db_tally', JSON.stringify([]));
+        }
+
+        // --- ОБНОВЛЕНИЕ ДАШБОРДА ---
+        function updateDashboard() {
+            const ships = JSON.parse(localStorage.getItem('db_ships')) || [];
+            const containers = JSON.parse(localStorage.getItem('db_containers')) || [];
+            const timber = JSON.parse(localStorage.getItem('db_timber')) || [];
+            const wagons = JSON.parse(localStorage.getItem('db_wagons')) || [];
+
+            const totalVol = timber.reduce((sum, item) => sum + item.vol, 0);
+
+            document.getElementById('dashShips').innerText = ships.length;
+            document.getElementById('dashContainers').innerText = containers.length;
+            document.getElementById('dashTimber').innerText = totalVol.toFixed(0);
+            document.getElementById('dashWagons').innerText = wagons.length;
+            
+            // Активные процессы (Сначала суда, если нет - вагоны)
+            const procDiv = document.getElementById('activeProcesses');
+            if (ships.length > 0) {
+                procDiv.innerHTML = '';
+                ships.slice(0, 3).forEach(s => {
+                    let bClass = s.status === 'Ожидание' ? 'badge-warn' : 'badge-ok';
+                    procDiv.innerHTML += `
+                        <div class="list-item">
+                            <div><b>Судно "${s.name}"</b><span class="sub">${s.cargo}</span></div>
+                            <span class="badge ${bClass}">${s.status}</span>
+                        </div>
+                    `;
+                });
+            } else if (wagons.length > 0) {
+                procDiv.innerHTML = '';
+                wagons.slice(0, 3).forEach(w => {
+                    procDiv.innerHTML += `
+                        <div class="list-item">
+                            <div><b>Вагон №${w.num}</b><span class="sub">Время: ${w.time}</span></div>
+                            <span class="badge badge-warn">${w.status}</span>
+                        </div>
+                    `;
+                });
+            } else {
+                procDiv.innerHTML = '<p style="color: var(--text-muted); font-size: 13px; text-align: center; padding: 10px 0;">Нет активных процессов</p>';
+            }
+        }
+
+        // --- РЕНДЕР СПИСКОВ ---
+        function renderShips() {
+            const ships = JSON.parse(localStorage.getItem('db_ships')) || [];
+            const list = document.getElementById('shipsList');
+            if (ships.length === 0) {
+                list.innerHTML = '<p style="color: var(--text-muted); font-size: 13px; text-align: center; padding: 10px 0;">Список пуст</p>';
+                return;
+            }
+            list.innerHTML = '';
+            ships.forEach((s, index) => {
+                let bClass = s.status === 'Ожидание' ? 'badge-warn' : 'badge-ok';
+                list.innerHTML += `
+                    <div class="list-item">
+                        <div><b>${s.name}</b><span class="sub">${s.cargo}</span></div>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <span class="badge ${bClass}">${s.status}</span>
+                            <button class="btn-delete" onclick="deleteShip(${index})"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function renderContainers() {
+            const containers = JSON.parse(localStorage.getItem('db_containers')) || [];
+            const list = document.getElementById('containersList');
+            if (containers.length === 0) {
+                list.innerHTML = '<p style="color: var(--text-muted); font-size: 13px; text-align: center; padding: 10px 0;">Список пуст</p>';
+                return;
+            }
+            list.innerHTML = '';
+            containers.forEach((c, index) => {
+                list.innerHTML += `
+                    <div class="list-item">
+                        <div><b>${c.num}</b><span class="sub">Ячейка: ${c.cell}</span></div>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <span class="badge badge-ok">${c.status}</span>
+                            <button class="btn-delete" onclick="deleteContainer(${index})"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function renderTimber() {
+            const timber = JSON.parse(localStorage.getItem('db_timber')) || [];
+            const list = document.getElementById('timberList');
+            if (timber.length === 0) {
+                list.innerHTML = '<p style="color: var(--text-muted); font-size: 13px; text-align: center; padding: 10px 0;">Список пуст</p>';
+                return;
+            }
+            list.innerHTML = '';
+            timber.forEach((t, index) => {
+                list.innerHTML += `
+                    <div class="list-item">
+                        <div><b>${t.type}</b><span class="sub">${t.address}</span></div>
+                        <div style="text-align:right; display:flex; align-items:center; gap:10px;">
+                            <div><b>${t.vol} м³</b><br><span class="sub">${t.count} шт.</span></div>
+                            <button class="btn-delete" onclick="deleteTimber(${index})"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function renderTally() {
+            const records = JSON.parse(localStorage.getItem('db_tally')) || [];
+            const logDiv = document.getElementById('tallyLog');
+            if (records.length === 0) {
+                logDiv.innerHTML = '<p style="color: var(--text-muted); font-size: 13px; text-align: center; padding: 10px 0;">Нет записей</p>';
+                return;
+            }
+            logDiv.innerHTML = '';
+            records.forEach((r, index) => {
+                logDiv.innerHTML += `
+                    <div class="list-item">
+                        <div><b>BL: ${r.bl}</b><span class="sub">${r.count} мест (${r.time})</span></div>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <span class="badge badge-warn">Ожидает</span>
+                            <button class="btn-delete" onclick="deleteRecord(${index})"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function refreshAll() {
+            updateDashboard();
+            renderShips();
+            renderContainers();
+            renderTimber();
+            renderTally();
+        }
+
+        // --- АВТОРИЗАЦИЯ И НАВИГАЦИЯ ---
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const role = document.getElementById('loginRole').value;
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('app-screen').classList.remove('hidden');
+            document.getElementById('currentRole').innerText = role;
+            
+            if (role === 'Тальман') document.querySelectorAll('.nav-item')[2].click();
+            else if (role === 'Мастер площадки') document.querySelectorAll('.nav-item')[3].click();
+            else document.querySelectorAll('.nav-item')[0].click();
+            
+            refreshAll();
+        });
+
+        function logout() {
+            document.getElementById('app-screen').classList.add('hidden');
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('loginForm').reset();
+        }
+
+        function switchTab(tabId, element) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+            element.classList.add('active');
+        }
+
+        // --- ДОБАВЛЕНИЕ И УДАЛЕНИЕ ---
+        function addShip() {
+            const name = document.getElementById('shipName').value;
+            const cargo = document.getElementById('shipCargo').value;
+            const status = document.getElementById('shipStatus').value;
+            if(!name || !cargo) { alert('Заполните название и груз!'); return; }
+            
+            let ships = JSON.parse(localStorage.getItem('db_ships')) || [];
+            ships.unshift({ name: name, cargo: cargo, status: status });
+            localStorage.setItem('db_ships', JSON.stringify(ships));
+            
+            document.getElementById('shipName').value = '';
+            document.getElementById('shipCargo').value = '';
+            renderShips();
+            updateDashboard();
+        }
+
+        function deleteShip(index) {
+            let arr = JSON.parse(localStorage.getItem('db_ships')) || [];
+            arr.splice(index, 1);
+            localStorage.setItem('db_ships', JSON.stringify(arr));
+            renderShips();
+            updateDashboard();
+        }
+
+        function clearShips() {
+            if(confirm('Очистить список судов?')) {
+                localStorage.setItem('db_ships', JSON.stringify([]));
+                renderShips();
+                updateDashboard();
+            }
+        }
+
+        document.getElementById('tallyForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const bl = document.getElementById('blNumber').value;
+            const count = document.getElementById('packageCount').value;
+            
+            let records = JSON.parse(localStorage.getItem('db_tally')) || [];
+            records.unshift({ bl: bl, count: count, time: new Date().toLocaleTimeString() });
+            localStorage.setItem('db_tally', JSON.stringify(records));
+            
+            this.reset();
+            renderTally();
+        });
+
+        function deleteRecord(index) {
+            let records = JSON.parse(localStorage.getItem('db_tally')) || [];
+            records.splice(index, 1);
+            localStorage.setItem('db_tally', JSON.stringify(records));
+            renderTally();
+        }
+
+        function clearAllRecords() {
+            if(confirm('Очистить очередь?')) {
+                localStorage.setItem('db_tally', JSON.stringify([]));
+                renderTally();
+            }
+        }
+
+        function simulateScan() {
+            const randomNum = "MSCU" + Math.floor(1000000 + Math.random() * 9000000);
+            const randomCell = "A-" + Math.floor(10 + Math.random() * 90) + "-" + Math.floor(1 + Math.random() * 5);
+            document.getElementById('scanNum').innerText = randomNum;
+            document.getElementById('scanCell').innerText = randomCell;
+            document.getElementById('scanResult').style.display = 'block';
+            window.currentScan = { num: randomNum, cell: randomCell, status: "Импорт" };
+        }
+
+        function confirmContainer() {
+            if(window.currentScan) {
+                let containers = JSON.parse(localStorage.getItem('db_containers')) || [];
+                containers.unshift(window.currentScan);
+                localStorage.setItem('db_containers', JSON.stringify(containers));
+                
+                document.getElementById('scanResult').style.display = 'none';
+                renderContainers();
+                updateDashboard();
+            }
+        }
+
+        function deleteContainer(index) {
+            let arr = JSON.parse(localStorage.getItem('db_containers')) || [];
+            arr.splice(index, 1);
+            localStorage.setItem('db_containers', JSON.stringify(arr));
+            renderContainers();
+            updateDashboard();
+        }
+
+        function clearContainers() {
+            if(confirm('Очистить список контейнеров?')) {
+                localStorage.setItem('db_containers', JSON.stringify([]));
+                renderContainers();
+                updateDashboard();
+            }
+        }
+
+        function calcVolume() {
+            const type = parseFloat(document.getElementById('packType').value);
+            const count = parseFloat(document.getElementById('packCount').value) || 0;
+            document.getElementById('totalVolume').innerText = (type * count).toFixed(2);
+        }
+
+        function addTimber() {
+            const typeSelect = document.getElementById('packType');
+            const typeText = typeSelect.options[typeSelect.selectedIndex].text.split(' ')[0];
+            const count = parseFloat(document.getElementById('packCount').value) || 0;
+            const address = document.getElementById('timberAddress').value || 'Не указан';
+            
+            if (count <= 0) { alert('Введите количество пакетов!'); return; }
+            const vol = parseFloat(document.getElementById('totalVolume').innerText);
+            
+            let timber = JSON.parse(localStorage.getItem('db_timber')) || [];
+            timber.unshift({ type: typeText, count: count, vol: vol, address: address });
+            localStorage.setItem('db_timber', JSON.stringify(timber));
+            
+            document.getElementById('packCount').value = '';
+            document.getElementById('timberAddress').value = '';
+            calcVolume();
+            renderTimber();
+            updateDashboard();
+        }
+
+        function deleteTimber(index) {
+            let arr = JSON.parse(localStorage.getItem('db_timber')) || [];
+            arr.splice(index, 1);
+            localStorage.setItem('db_timber', JSON.stringify(arr));
+            renderTimber();
+            updateDashboard();
+        }
+
+        function clearTimber() {
+            if(confirm('Очистить список леса?')) {
+                localStorage.setItem('db_timber', JSON.stringify([]));
+                renderTimber();
+                updateDashboard();
+            }
+        }
+
+        // Запуск
+        window.onload = function() {
+            initDB();
+            refreshAll();
+        }
+    </script>
+</body>
+</html>
